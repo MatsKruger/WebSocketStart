@@ -1,6 +1,6 @@
 /*    'btford.socket-io'   */
 
-var app = angular.module("VoteApp",['angularCharts']);
+var app = angular.module("VoteApp",['angularCharts', 'btford.socket-io']);
 
 //This will/must be used if you are using OpenShift for hosting
 /*function openShiftSocket(socketFactory,$location){
@@ -13,8 +13,38 @@ var app = angular.module("VoteApp",['angularCharts']);
 }
 */
 
+app.factory("mySocket", function (socketFactory, $location)
+{
+    return socketFactory();
+});
 
-app.controller("VoteCtrl", function($scope) {
+
+app.controller("VoteCtrl", function($scope, mySocket) {
+
+  $scope.vote = function (val)
+    {
+      console.log(val)
+        var vote =
+            {
+                value: val
+            };
+
+        mySocket.emit("vote", vote);
+    };
+
+    mySocket.on("update", function (res)
+    {
+      console.log(res)
+        $scope.votes.data[0].y = res;
+    });
+
+    mySocket.on("setup", function (res)
+    {
+        $scope.votes.data[0].y = res.results;
+        $scope.config.title = res.title;
+        $scope.yesText = res.yesText;
+        $scope.noText = res.noText;
+    });
 
   //Do not focus on this part. Its just to set up the charts
   //https://github.com/chinmaymk/angular-charts/
